@@ -1,8 +1,8 @@
 /*
-	queue
-	This question requires you to use queues to implement the functionality of the stac
+    queue
+    This question requires you to use queues to implement the functionality of the stac
 */
-// I AM NOT DONE
+// I AM  DONE
 
 #[derive(Debug)]
 pub struct Queue<T> {
@@ -52,41 +52,96 @@ impl<T> Default for Queue<T> {
     }
 }
 
-pub struct myStack<T>
-{
-	//TODO
-	q1:Queue<T>,
-	q2:Queue<T>
+enum StackQueueIndex {
+    Stack1,
+    Stack2,
 }
-impl<T> myStack<T> {
+pub struct myStack<T> {
+    //TODO
+    index: StackQueueIndex,
+    q1: Queue<T>,
+    q2: Queue<T>,
+}
+impl<T> myStack<T>
+where
+    T: std::fmt::Debug,
+{
     pub fn new() -> Self {
         Self {
-			//TODO
-			q1:Queue::<T>::new(),
-			q2:Queue::<T>::new()
+            //TODO
+            index: StackQueueIndex::Stack1,
+            q1: Queue::<T>::new(),
+            q2: Queue::<T>::new(),
         }
     }
     pub fn push(&mut self, elem: T) {
-        //TODO
+        match self.index {
+            StackQueueIndex::Stack1 => {
+                self.q1.enqueue(elem);
+                println!("q1:{:?}", self.q1);
+            }
+            StackQueueIndex::Stack2 => {
+                self.q2.enqueue(elem);
+                println!("s2:{:?}", self.q2);
+            }
+        }
     }
     pub fn pop(&mut self) -> Result<T, &str> {
-        //TODO
-		Err("Stack is empty")
+        match self.index {
+            StackQueueIndex::Stack1 => {
+                while self.q1.size() > 1 {
+                    let elem = self.q1.dequeue().unwrap();
+                    self.q2.enqueue(elem);
+                }
+                if self.q1.size() == 1 {
+                    self.index = StackQueueIndex::Stack2;
+                    return self.q1.dequeue();
+                } else {
+                    return Err("Stack is empty");
+                }
+            }
+            StackQueueIndex::Stack2 => {
+                while self.q2.size() > 1 {
+                    let elem = self.q2.dequeue().unwrap();
+                    self.q1.enqueue(elem);
+                }
+                if self.q2.size() == 1 {
+                    self.index = StackQueueIndex::Stack1;
+                    return self.q2.dequeue();
+                } else {
+                    return Err("Stack is empty");
+                }
+            }
+        }
     }
     pub fn is_empty(&self) -> bool {
-		//TODO
-        true
+        match self.index {
+            StackQueueIndex::Stack1 => {
+                if self.q1.size() == 0 {
+                    true
+                } else {
+                    false
+                }
+            }
+            StackQueueIndex::Stack2 => {
+                if self.q2.size() == 0 {
+                    true
+                } else {
+                    false
+                }
+            }
+        }
     }
 }
 
 #[cfg(test)]
 mod tests {
-	use super::*;
-	
-	#[test]
-	fn test_queue(){
-		let mut s = myStack::<i32>::new();
-		assert_eq!(s.pop(), Err("Stack is empty"));
+    use super::*;
+
+    #[test]
+    fn test_queue() {
+        let mut s = myStack::<i32>::new();
+        assert_eq!(s.pop(), Err("Stack is empty"));
         s.push(1);
         s.push(2);
         s.push(3);
@@ -100,5 +155,5 @@ mod tests {
         assert_eq!(s.pop(), Ok(1));
         assert_eq!(s.pop(), Err("Stack is empty"));
         assert_eq!(s.is_empty(), true);
-	}
+    }
 }
