@@ -40,7 +40,11 @@ impl<T> LinkedList<T> {
             end: None,
         }
     }
-
+}
+impl<T> LinkedList<T>
+where
+    T: PartialOrd + Clone,
+{
     pub fn add(&mut self, obj: T) {
         let mut node = Box::new(Node::new(obj));
         node.next = None;
@@ -53,11 +57,11 @@ impl<T> LinkedList<T> {
         self.length += 1;
     }
 
-    pub fn get(&self, index: i32) -> Option<&T> {
+    pub fn get(&mut self, index: i32) -> Option<&T> {
         self.get_ith_node(self.start, index)
     }
 
-    fn get_ith_node(&self, node: Option<NonNull<Node<T>>>, index: i32) -> Option<&T> {
+    fn get_ith_node(&mut self, node: Option<NonNull<Node<T>>>, index: i32) -> Option<&T> {
         match node {
             None => None,
             Some(next_ptr) => match index {
@@ -66,47 +70,39 @@ impl<T> LinkedList<T> {
             },
         }
     }
-}
 
-impl LinkedList<i32> {
-    pub fn merge(list_a: LinkedList<i32>, list_b: LinkedList<i32>) -> Self {
-        //TODO
+    pub fn merge(mut list_a: LinkedList<T>, mut list_b: LinkedList<T>) -> Self {
+        let mut merged_list = LinkedList::new();
+        let mut a_current = list_a.start;
+        let mut b_current = list_b.start;
 
-        let mut out = Self::new();
+        while a_current.is_some() || b_current.is_some() {
+            let a_next_val = a_current.map(|ptr| unsafe { &(*ptr.as_ptr()).val });
+            let b_next_val = b_current.map(|ptr| unsafe { &(*ptr.as_ptr()).val });
 
-        let mut a_node_opt = list_a.start;
-        let mut b_node_opt = list_b.start;
-
-        for i in 0..list_a.length + list_b.length {
-            if let Some(a_node) = a_node_opt {
-                let a = unsafe { a_node.as_ref() };
-                if let Some(b_node) = b_node_opt {
-                    let b = unsafe { b_node.as_ref() };
-                    if a.val < b.val {
-                        out.add(a.val);
-
-                        a_node_opt = a.next;
-                    } else if a.val > b.val {
-                        out.add(b.val);
-                        b_node_opt = b.next;
+            match (a_next_val, b_next_val) {
+                (Some(a_val), Some(b_val)) => {
+                    if a_val <= b_val {
+                        merged_list.add(a_val.clone());
+                        a_current = unsafe { (*a_current.unwrap().as_ptr()).next };
                     } else {
-                        out.add(a.val);
-                        out.add(b.val);
-                        a_node_opt = a.next;
-                        b_node_opt = b.next;
+                        merged_list.add(b_val.clone());
+                        b_current = unsafe { (*b_current.unwrap().as_ptr()).next };
                     }
-                } else {
-                    out.add(a.val);
-                    a_node_opt = a.next;
                 }
-            } else if let Some(b_node) = b_node_opt {
-                let b = unsafe { b_node.as_ref() };
-                out.add(b.val);
-                b_node_opt = b.next;
+                (Some(a_val), None) => {
+                    merged_list.add(a_val.clone());
+                    a_current = unsafe { (*a_current.unwrap().as_ptr()).next };
+                }
+                (None, Some(b_val)) => {
+                    merged_list.add(b_val.clone());
+                    b_current = unsafe { (*b_current.unwrap().as_ptr()).next };
+                }
+                (None, None) => break,
             }
         }
 
-        out
+        merged_list
     }
 }
 

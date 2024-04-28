@@ -5,6 +5,7 @@
 // I AM  DONE
 
 use std::fmt::{self, Display, Formatter};
+use std::mem::swap;
 use std::ptr::NonNull;
 use std::vec::*;
 
@@ -72,31 +73,15 @@ impl<T> LinkedList<T> {
             },
         }
     }
-}
 
-impl LinkedList<i32> {
     pub fn reverse(&mut self) {
-        if self.length < 2 {
-            return;
+        let mut current_ptr = self.start;
+        while let Some(current) = current_ptr {
+            let mut current_node = unsafe { current.as_ptr().as_mut().unwrap() };
+            std::mem::swap(&mut current_node.prev, &mut current_node.next);
+            current_ptr = current_node.prev;
         }
-
-        let count = self.length / 2;
-        let mut start: Option<NonNull<Node<i32>>> = self.start;
-        let mut end: Option<NonNull<Node<i32>>> = self.end;
-        let mut last = self.length - 1;
-        for i in 0..count {
-            match start {
-                None => break,
-                Some(val) => {
-                    /*switch start and end */
-                    let temp = unsafe { (*val.as_ptr()).val };
-                    unsafe { (*val.as_ptr()).val = (*end.unwrap().as_ptr()).val };
-                    unsafe { (*end.unwrap().as_ptr()).val = temp };
-                    start = unsafe { (*val.as_ptr()).next };
-                    end = unsafe { (*end.unwrap().as_ptr()).prev };
-                }
-            }
-        }
+        std::mem::swap(&mut self.start, &mut self.end);
     }
 }
 impl<T> Display for LinkedList<T>
